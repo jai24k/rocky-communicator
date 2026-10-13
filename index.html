@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rocky Communicator</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #121212; color: #fff; text-align: center; }
+        textarea { width: 100%; max-width: 400px; padding: 10px; border-radius: 8px; border: none; }
+        button { padding: 15px 30px; font-size: 18px; background: #007bff; color: white; border: none; border-radius: 8px; margin-top: 20px; cursor: pointer; }
+        button:disabled { background: #555; }
+        #status { margin-top: 15px; color: #aaa; font-size: 14px; }
+        audio { margin-top: 20px; display: none; width: 100%; max-width: 400px; }
+    </style>
+</head>
+<body>
+    <h2>Rocky Communicator</h2>
+    <p>Enter text to generate Eridian voice.</p>
+    
+    <textarea id="textInput" rows="4">Amaze! Amaze! Amaze! Human friend is good.</textarea>
+    <br>
+    <button id="speakBtn">Generate Voice</button>
+    <div id="status">Ready</div>
+    <audio id="audioPlayer" controls></audio>
+
+    <script type="module">
+        import { client } from "https://cdn.jsdelivr.net/npm/@gradio/client/dist/index.min.js";
+
+        const btn = document.getElementById('speakBtn');
+        const status = document.getElementById('status');
+        const audioPlayer = document.getElementById('audioPlayer');
+
+        btn.addEventListener('click', async () => {
+            const text = document.getElementById('textInput').value;
+            btn.disabled = true;
+            status.innerText = "Connecting to Hugging Face API...";
+
+            try {
+                // Replace with your actual Hugging Face Access Token
+                const hfClient = await client("coqui/xtts", { hf_token: "YOUR_HUGGING_FACE_TOKEN" });
+                
+                status.innerText = "Generating Rocky's voice...";
+                
+                const result = await hfClient.predict("/predict", [
+                    text, 
+                    "en", 
+                    "https://your-website.com/stage-intro.mp3", // Must be a direct URL to your hosted MP3
+                    null, 
+                    false, 
+                    true, 
+                    false, 
+                ]);
+
+                const audioUrl = result.data[0];
+                audioPlayer.src = audioUrl;
+                audioPlayer.style.display = "inline-block";
+                audioPlayer.play();
+                
+                status.innerText = "Success!";
+            } catch (error) {
+                status.innerText = "Error: " + error.message;
+            } finally {
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
